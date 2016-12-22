@@ -18,24 +18,13 @@
  */
 package org.apache.olingo.server.core.serializer.xml;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-
 import org.apache.olingo.commons.api.Constants;
+import org.apache.olingo.commons.api.data.AbstractEntityCollection;
+import org.apache.olingo.commons.api.data.ComplexIterator;
 import org.apache.olingo.commons.api.data.ComplexValue;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
-import org.apache.olingo.commons.api.data.AbstractEntityCollection;
 import org.apache.olingo.commons.api.data.EntityIterator;
 import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Linked;
@@ -72,6 +61,7 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandItem;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.LevelsExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.apache.olingo.server.core.ComplexStreamContent;
 import org.apache.olingo.server.core.ODataWritableContent;
 import org.apache.olingo.server.core.serializer.AbstractODataSerializer;
 import org.apache.olingo.server.core.serializer.SerializerResultImpl;
@@ -79,6 +69,17 @@ import org.apache.olingo.server.core.serializer.utils.CircleStreamBuffer;
 import org.apache.olingo.server.core.serializer.utils.ContextURLBuilder;
 import org.apache.olingo.server.core.serializer.utils.ExpandSelectHelper;
 import org.apache.olingo.server.core.uri.queryoption.ExpandOptionImpl;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ODataXmlSerializer extends AbstractODataSerializer {
 
@@ -896,6 +897,21 @@ public class ODataXmlSerializer extends AbstractODataSerializer {
     }
   }
 
+  private void writeComplexCollectionStream(final ServiceMetadata metadata,
+          final EdmComplexType type, final ComplexIterator iterator, final Set<List<String>> selectedPaths,
+          final String xml10InvalidCharReplacement, final XMLStreamWriter writer)
+          throws XMLStreamException, SerializerException {
+    for (ComplexValue value : iterator) {
+      writer.writeStartElement(METADATA, Constants.ELEM_ELEMENT, NS_METADATA);
+      if (derivedComplexType(type, iterator.getType()) != null) {
+        writer.writeAttribute(METADATA, NS_METADATA, Constants.ATTR_TYPE, iterator.getType());
+      }
+      writeComplexValue(metadata, type, value.getValue(), selectedPaths,
+                        xml10InvalidCharReplacement, writer);
+    }
+    writer.writeEndElement();
+  }
+
   private void writeComplexCollection(final ServiceMetadata metadata,
       final EdmComplexType type, final Property property, final Set<List<String>> selectedPaths,
       final String xml10InvalidCharReplacement, final XMLStreamWriter writer)
@@ -1139,6 +1155,46 @@ public class ODataXmlSerializer extends AbstractODataSerializer {
     } catch (IOException e) {
       cachedException =
           new SerializerException(IO_EXCEPTION_TEXT, e, SerializerException.MessageKeys.IO_EXCEPTION);
+      throw cachedException;
+    } finally {
+      closeCircleStreamBufferOutput(outputStream, cachedException);
+    }
+  }
+
+  @Override
+  public SerializerStreamResult complexCollectionStreamed(ServiceMetadata metadata, EdmComplexType type,
+          ComplexIterator iterator, ComplexSerializerOptions options) throws SerializerException {
+    return ComplexStreamContent.ComplexWritableForXml(iterator, type, this, metadata, options);
+  }
+
+  public void complexCollectionIntoStream(final ServiceMetadata metadata, final EdmComplexType type,
+          final ComplexIterator iterator, final ComplexSerializerOptions options, final OutputStream outputStream)
+          throws SerializerException {
+    final ContextURL contextURL = checkContextURL(options == null ? null : options.getContextURL());
+    SerializerException cachedException = null;
+    try {
+      XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(outputStream, DEFAULT_CHARSET);
+      writer.writeStartDocument(DEFAULT_CHARSET, "1.0");
+      writer.writeStartElement(METADATA, Constants.VALUE, NS_METADATA);
+      writer.writeNamespace(METADATA, NS_METADATA);
+      writer.writeNamespace(DATA, NS_DATA);
+      writer.writeAttribute(METADATA, NS_METADATA, Constants.ATTR_TYPE, collectionType(type));
+      writer.writeAttribute(METADATA, NS_METADATA, Constants.CONTEXT,
+                            ContextURLBuilder.create(contextURL).toASCIIString());
+      writeMetadataETag(metadata, writer);
+      writeComplexCollectionStream(metadata, type, iterator, null, options.xml10InvalidCharReplacement(), writer);
+      writer.writeEndElement();
+      writer.writeEndDocument();
+      writer.flush();
+      writer.close();
+      outputStream.close();
+    } catch (final XMLStreamException e) {
+      cachedException =
+              new SerializerException(IO_EXCEPTION_TEXT, e, SerializerException.MessageKeys.IO_EXCEPTION);
+      throw cachedException;
+    } catch (IOException e) {
+      cachedException =
+              new SerializerException(IO_EXCEPTION_TEXT, e, SerializerException.MessageKeys.IO_EXCEPTION);
       throw cachedException;
     } finally {
       closeCircleStreamBufferOutput(outputStream, cachedException);

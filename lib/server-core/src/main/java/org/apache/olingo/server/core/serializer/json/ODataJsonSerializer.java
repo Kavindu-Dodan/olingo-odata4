@@ -18,17 +18,11 @@
  */
 package org.apache.olingo.server.core.serializer.json;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.olingo.commons.api.Constants;
 import org.apache.olingo.commons.api.data.AbstractEntityCollection;
+import org.apache.olingo.commons.api.data.ComplexIterator;
 import org.apache.olingo.commons.api.data.ComplexValue;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
@@ -77,6 +71,7 @@ import org.apache.olingo.server.api.uri.queryoption.ExpandItem;
 import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.LevelsExpandOption;
 import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.apache.olingo.server.core.ComplexStreamContent;
 import org.apache.olingo.server.core.ODataWritableContent;
 import org.apache.olingo.server.core.serializer.AbstractODataSerializer;
 import org.apache.olingo.server.core.serializer.SerializerResultImpl;
@@ -87,8 +82,14 @@ import org.apache.olingo.server.core.serializer.utils.ExpandSelectHelper;
 import org.apache.olingo.server.core.uri.UriHelperImpl;
 import org.apache.olingo.server.core.uri.queryoption.ExpandOptionImpl;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ODataJsonSerializer extends AbstractODataSerializer {
 
@@ -743,6 +744,23 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
     json.writeEndArray();
   }
 
+  private void writeComplexCollectionStream(final ServiceMetadata metadata, final EdmComplexType type,
+          final ComplexIterator iterator,
+          final Set<List<String>> selectedPaths, final JsonGenerator json)
+          throws IOException, SerializerException {
+    json.writeStartArray();
+    for (ComplexValue property : iterator) {
+       json.writeStartObject();
+      if (isODataMetadataFull) {
+        json.writeStringField(Constants.JSON_TYPE, "#" +
+                type.getFullQualifiedName().getFullQualifiedNameAsString());
+      }
+      writeComplexValue(metadata, type, property.getValue(), selectedPaths, json);
+      json.writeEndObject();
+    }
+    json.writeEndArray();
+  }
+
   private void writeComplexCollection(final ServiceMetadata metadata, final EdmComplexType type,
       final Property property,
       final Set<List<String>> selectedPaths, final JsonGenerator json)
@@ -1066,6 +1084,48 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
       closeCircleStreamBufferOutput(outputStream, cachedException);
     }
   }
+
+   @Override
+   public SerializerStreamResult complexCollectionStreamed(
+           ServiceMetadata metadata,
+           EdmComplexType type,
+           ComplexIterator iterator,
+           ComplexSerializerOptions options) throws SerializerException{
+
+     return ComplexStreamContent.ComplexWritableForJson(iterator,type,this,metadata,options);
+   }
+
+   public void complexCollectionIntoStream(final ServiceMetadata metadata, final EdmComplexType type,
+           final ComplexIterator iterator, final ComplexSerializerOptions options,final OutputStream outputStream)
+           throws SerializerException {
+      SerializerException cachedException = null;
+      try {
+         final ContextURL contextURL = checkContextURL(options == null ? null : options.getContextURL());
+
+         JsonGenerator json = new JsonFactory().createGenerator(outputStream);
+         json.writeStartObject();
+         writeContextURL(contextURL, json);
+         writeMetadataETag(metadata, json);
+         if (isODataMetadataFull) {
+            json.writeStringField(Constants.JSON_TYPE,
+                                  "#Collection(" + type.getFullQualifiedName().getFullQualifiedNameAsString() + ")");
+         }
+         writeOperations(iterator.getOperations(), json);
+         json.writeFieldName(Constants.VALUE);
+         writeComplexCollectionStream(metadata,type,iterator,null,json);
+         json.writeEndObject();
+
+         json.close();
+         outputStream.close();
+
+      } catch (final IOException e) {
+         cachedException =
+                 new SerializerException(IO_EXCEPTION_TEXT, e, SerializerException.MessageKeys.IO_EXCEPTION);
+         throw cachedException;
+      } finally {
+         closeCircleStreamBufferOutput(outputStream, cachedException);
+      }
+   }
 
   @Override
   public SerializerResult complexCollection(final ServiceMetadata metadata, final EdmComplexType type,

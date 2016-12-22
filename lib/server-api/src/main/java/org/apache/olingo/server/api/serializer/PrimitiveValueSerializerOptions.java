@@ -19,6 +19,7 @@
 package org.apache.olingo.server.api.serializer;
 
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.server.api.ODataContentWriteErrorCallback;
 
 /** Options for the OData serializer. */
 public class PrimitiveValueSerializerOptions {
@@ -29,6 +30,7 @@ public class PrimitiveValueSerializerOptions {
   private Integer scale;
   private Boolean isUnicode;
   private String xml10InvalidCharReplacement;
+  private ODataContentWriteErrorCallback odataContentWriteErrorCallback;
 
   /** Gets the nullable facet. */
   public Boolean isNullable() {
@@ -54,7 +56,19 @@ public class PrimitiveValueSerializerOptions {
   public Boolean isUnicode() {
     return isUnicode;
   }
-  
+
+  /**
+   * Gets the callback which is used in case of an exception during
+   * write of the content (in case the content will be written/streamed
+   * in the future)
+   * @return callback which is used in case of an exception during
+   * write of the content
+   *
+   */
+  public ODataContentWriteErrorCallback getODataContentWriteErrorCallback() {
+    return odataContentWriteErrorCallback;
+  }
+
   /** Gets the replacement string for unicode characters, that is not allowed in XML 1.0 */
   public String xml10InvalidCharReplacement() {
     return xml10InvalidCharReplacement;
@@ -120,7 +134,12 @@ public class PrimitiveValueSerializerOptions {
     public Builder xml10InvalidCharReplacement(final String replacement) {
       options.xml10InvalidCharReplacement = replacement;
       return this;
-    } 
+    }
+
+    public Builder writeContentErrorCallback(ODataContentWriteErrorCallback ODataContentWriteErrorCallback) {
+      options.odataContentWriteErrorCallback = ODataContentWriteErrorCallback;
+      return this;
+    }
     
     /** Builds the OData serializer options. */
     public PrimitiveValueSerializerOptions build() {
