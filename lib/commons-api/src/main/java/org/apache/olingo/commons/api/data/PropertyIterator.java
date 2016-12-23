@@ -23,12 +23,25 @@ import org.apache.olingo.commons.api.ex.ODataNotSupportedException;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class PropertyIterator extends CollectionIterator<Property> {
+public abstract class PropertyIterator<T> extends CollectionIterator<T> {
 
-   private List<Operation> operations = Collections.emptyList();
+   private final List<Operation> operations = Collections.emptyList();
+   private final String name;
+
+   protected PropertyIterator(String name) {
+      this.name = name;
+   }
 
    public List<Operation> getOperations() {
       return operations;
+   }
+
+   /**
+    * Get name of property.
+    * @return name of property
+    */
+   public String getName() {
+      return name;
    }
 
    public void remove() {

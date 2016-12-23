@@ -42,7 +42,7 @@ public class ComplexStreamContentForJson extends ComplexStreamContent {
    }
 
    @Override
-   protected void writeComplex(ComplexIterator entity, OutputStream outputStream) throws SerializerException {
+   protected void writeComplex(OutputStream outputStream) throws SerializerException {
       try {
          jsonSerializer.complexCollectionIntoStream(metadata, complexType, iterator, options, outputStream);
          outputStream.flush();

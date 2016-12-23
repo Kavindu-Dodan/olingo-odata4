@@ -24,6 +24,7 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.AbstractEntityCollection;
 import org.apache.olingo.commons.api.data.EntityIterator;
 import org.apache.olingo.commons.api.data.Property;
+import org.apache.olingo.commons.api.data.PropertyIterator;
 import org.apache.olingo.commons.api.edm.EdmComplexType;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
@@ -117,6 +118,16 @@ public interface ODataSerializer {
       PrimitiveSerializerOptions options) throws SerializerException;
 
   /**
+   * Writes streamed primitive-collection data into OutputStream.
+   * @param metadata metadata for the service
+   * @param type     the {@link EdmEntityType}
+   * @param iterator the data of the complex collection
+   * @param options  options for the serializer
+   */
+  SerializerStreamResult primitiveCollectionStreamed(ServiceMetadata metadata, EdmPrimitiveType type,
+          PropertyIterator iterator, PrimitiveSerializerOptions options) throws SerializerException;
+
+  /**
    * Writes data of a collection of complex-type instances into an InputStream.
    * @param metadata metadata for the service
    * @param type complex type
@@ -127,7 +138,7 @@ public interface ODataSerializer {
           ComplexSerializerOptions options) throws SerializerException;
 
    /**
-    * Writes complex-collection data into an InputStream.
+    * Writes streamed complex-collection data into OutputStream.
     * @param metadata metadata for the service
     * @param type     the {@link EdmEntityType}
     * @param iterator the data of the complex collection

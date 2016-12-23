@@ -18,11 +18,11 @@
  */
 package org.apache.olingo.server.core;
 
-import org.apache.olingo.commons.api.data.ComplexIterator;
-import org.apache.olingo.commons.api.edm.EdmComplexType;
+import org.apache.olingo.commons.api.data.PropertyIterator;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.server.api.ODataContentWriteErrorCallback;
 import org.apache.olingo.server.api.ServiceMetadata;
-import org.apache.olingo.server.api.serializer.ComplexSerializerOptions;
+import org.apache.olingo.server.api.serializer.PrimitiveSerializerOptions;
 import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.serializer.SerializerStreamResult;
 import org.apache.olingo.server.core.serializer.SerializerStreamResultImpl;
@@ -32,26 +32,29 @@ import org.apache.olingo.server.core.serializer.xml.ODataXmlSerializer;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 
-public abstract class ComplexStreamContent extends CollectionWritableContent {
-   protected ComplexIterator iterator;
+public abstract class PrimitiveStreamContent extends CollectionWritableContent {
+   protected PropertyIterator iterator;
    protected ServiceMetadata metadata;
-   protected EdmComplexType complexType;
-   protected ComplexSerializerOptions options;
+   protected EdmPrimitiveType primitiveType;
+   protected PrimitiveSerializerOptions options;
 
-   protected ComplexStreamContent(ComplexIterator iterator, ServiceMetadata metadata, EdmComplexType
-           complexType, ComplexSerializerOptions options) {
+   protected PrimitiveStreamContent(
+           PropertyIterator iterator,
+           ServiceMetadata metadata,
+           EdmPrimitiveType primitiveType,
+           PrimitiveSerializerOptions options) {
       this.iterator = iterator;
-      this.complexType = complexType;
+      this.primitiveType = primitiveType;
       this.metadata = metadata;
       this.options = options;
    }
 
-   protected abstract void writeComplex(OutputStream outputStream) throws SerializerException;
+   protected abstract void writePrimitive(OutputStream out) throws SerializerException;
 
    @Override
    protected void writeCollection(OutputStream out) {
       try {
-         writeComplex(out);
+         writePrimitive(out);
       } catch (SerializerException e) {
          final ODataContentWriteErrorCallback errorCallback = options.getODataContentWriteErrorCallback();
          if (errorCallback != null) {
@@ -61,26 +64,33 @@ public abstract class ComplexStreamContent extends CollectionWritableContent {
       }
    }
 
-   public static SerializerStreamResult ComplexWritableForJson(ComplexIterator iterator, EdmComplexType edmComplexType,
-           ODataJsonSerializer jsonSerializer, ServiceMetadata serviceMetadata,
-           ComplexSerializerOptions options) {
+   public static SerializerStreamResult PrimitiveStreamContentForJson(
+           PropertyIterator iterator,
+           EdmPrimitiveType primitiveType,
+           ODataJsonSerializer jsonSerializer,
+           ServiceMetadata serviceMetadata,
+           PrimitiveSerializerOptions options) {
+
       return SerializerStreamResultImpl.with()
-              .content(new ComplexStreamContentForJson(iterator,
-                                                       edmComplexType,
-                                                       jsonSerializer,
-                                                       serviceMetadata,
-                                                       options)).build();
+              .content(new PrimitiveStreamContentForJson(iterator,
+                                                         primitiveType,
+                                                         jsonSerializer,
+                                                         serviceMetadata,
+                                                         options)).build();
    }
 
-   public static SerializerStreamResult ComplexWritableForXml(ComplexIterator iterator, EdmComplexType
-           edmComplexType,
-           ODataXmlSerializer xmlSerializer, ServiceMetadata serviceMetadata,
-           ComplexSerializerOptions options) {
+   public static SerializerStreamResult PrimitiveStreamContentForXml(
+           PropertyIterator iterator,
+           EdmPrimitiveType primitiveType,
+           ODataXmlSerializer xmlSerializer,
+           ServiceMetadata serviceMetadata,
+           PrimitiveSerializerOptions options) {
+
       return SerializerStreamResultImpl.with()
-              .content(new ComplexStreamContentForXml(iterator,
-                                                      edmComplexType,
-                                                      xmlSerializer,
-                                                      serviceMetadata,
-                                                      options)).build();
+              .content(new PrimitiveStreamContentForXml(iterator,
+                                                        primitiveType,
+                                                        xmlSerializer,
+                                                        serviceMetadata,
+                                                        options)).build();
    }
 }

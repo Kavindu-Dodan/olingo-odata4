@@ -18,33 +18,36 @@
  */
 package org.apache.olingo.server.core;
 
-import org.apache.olingo.commons.api.data.ComplexIterator;
-import org.apache.olingo.commons.api.edm.EdmComplexType;
+import org.apache.olingo.commons.api.data.PropertyIterator;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.server.api.ServiceMetadata;
-import org.apache.olingo.server.api.serializer.ComplexSerializerOptions;
+import org.apache.olingo.server.api.serializer.PrimitiveSerializerOptions;
 import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.core.serializer.xml.ODataXmlSerializer;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-
-public class ComplexStreamContentForXml extends ComplexStreamContent {
+public class PrimitiveStreamContentForXml extends PrimitiveStreamContent {
    private final ODataXmlSerializer xmlSerializer;
 
-   protected ComplexStreamContentForXml(ComplexIterator iterator, EdmComplexType edmComplexType,
-           ODataXmlSerializer xmlSerializer, ServiceMetadata serviceMetadata,
-           ComplexSerializerOptions options) {
-      super(iterator, serviceMetadata, edmComplexType, options);
+   protected PrimitiveStreamContentForXml(
+           PropertyIterator iterator,
+           EdmPrimitiveType primitiveType,
+           ODataXmlSerializer xmlSerializer,
+           ServiceMetadata serviceMetadata,
+           PrimitiveSerializerOptions options) {
+
+      super(iterator, serviceMetadata, primitiveType, options);
 
       this.xmlSerializer = xmlSerializer;
    }
 
    @Override
-   protected void writeComplex(OutputStream outputStream) throws SerializerException {
+   protected void writePrimitive(OutputStream outputStream) throws SerializerException {
       try {
-         xmlSerializer.complexCollectionIntoStream(metadata, complexType, iterator, options, outputStream);
+         xmlSerializer.primitiveCollectionIntoStream(metadata, primitiveType, iterator, options, outputStream);
          outputStream.flush();
       } catch (final IOException e) {
          throw new ODataRuntimeException("Failed complex serialization", e);
