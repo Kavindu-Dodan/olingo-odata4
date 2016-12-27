@@ -746,10 +746,17 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
     json.writeEndArray();
   }
 
-  private void writePrimitiveCollectionStreamed(final EdmPrimitiveType type, final PropertyIterator property,
-          final Boolean isNullable, final Integer maxLength, final Integer precision, final Integer scale,
-          final Boolean isUnicode, final JsonGenerator json)
+  private void writePrimitiveCollectionStreamed(
+          final EdmPrimitiveType type,
+          final PropertyIterator property,
+          final Boolean isNullable,
+          final Integer maxLength,
+          final Integer precision,
+          final Integer scale,
+          final Boolean isUnicode,
+          final JsonGenerator json)
           throws IOException, SerializerException {
+
     json.writeStartArray();
     for (Object value : property) {
       try {
@@ -788,9 +795,14 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
     json.writeEndArray();
   }
 
-  private void writeComplexCollectionStream(final ServiceMetadata metadata, final EdmComplexType type,
-          final ComplexIterator iterator, final Set<List<String>> selectedPaths, final JsonGenerator json)
+  private void writeComplexCollectionStream(
+          final ServiceMetadata metadata,
+          final EdmComplexType type,
+          final ComplexIterator iterator,
+          final Set<List<String>> selectedPaths,
+          final JsonGenerator json)
           throws IOException, SerializerException {
+
     json.writeStartArray();
     for (ComplexValue property : iterator) {
       json.writeStartObject();
@@ -1105,14 +1117,22 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
   }
 
   @Override
-  public SerializerStreamResult primitiveCollectionStreamed(ServiceMetadata metadata,
-          EdmPrimitiveType type, PropertyIterator iterator, PrimitiveSerializerOptions options)
+  public SerializerStreamResult primitiveCollectionStreamed(
+          ServiceMetadata metadata,
+          EdmPrimitiveType type,
+          PropertyIterator iterator,
+          PrimitiveSerializerOptions options)
           throws SerializerException {
+
     return PrimitiveStreamContent.PrimitiveStreamContentForJson(iterator, type, this, metadata, options);
   }
 
-  public void primitiveCollectionIntoStream(final ServiceMetadata metadata, final EdmPrimitiveType type,
-          final PropertyIterator iterator, final PrimitiveSerializerOptions options, final OutputStream outputStream)
+  public void primitiveCollectionIntoStream(
+          final ServiceMetadata metadata,
+          final EdmPrimitiveType type,
+          final PropertyIterator iterator,
+          final PrimitiveSerializerOptions options,
+          final OutputStream outputStream)
           throws SerializerException {
 
     SerializerException cachedException = null;
@@ -1192,9 +1212,14 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
     return ComplexStreamContent.ComplexWritableForJson(iterator,type,this,metadata,options);
   }
 
-  public void complexCollectionIntoStream(final ServiceMetadata metadata, final EdmComplexType type,
-          final ComplexIterator iterator, final ComplexSerializerOptions options,final OutputStream outputStream)
+  public void complexCollectionIntoStream(
+          final ServiceMetadata metadata,
+          final EdmComplexType type,
+          final ComplexIterator iterator,
+          final ComplexSerializerOptions options,
+          final OutputStream outputStream)
           throws SerializerException {
+
     SerializerException cachedException = null;
     try {
       final ContextURL contextURL = checkContextURL(options == null ? null : options.getContextURL());
@@ -1209,7 +1234,7 @@ public class ODataJsonSerializer extends AbstractODataSerializer {
       }
       writeOperations(iterator.getOperations(), json);
       json.writeFieldName(Constants.VALUE);
-      writeComplexCollectionStream(metadata,type,iterator,null,json);
+      writeComplexCollectionStream(metadata, type, iterator, null, json);
       json.writeEndObject();
 
       json.close();

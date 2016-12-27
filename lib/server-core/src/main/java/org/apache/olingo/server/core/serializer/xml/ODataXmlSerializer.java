@@ -1185,7 +1185,8 @@ public class ODataXmlSerializer extends AbstractODataSerializer {
   }
 
   public void primitiveCollectionIntoStream(final ServiceMetadata metadata, final EdmPrimitiveType type,
-          final PropertyIterator iterator, final PrimitiveSerializerOptions options, final OutputStream outputStream) throws SerializerException {
+          final PropertyIterator iterator, final PrimitiveSerializerOptions options, final OutputStream outputStream)
+          throws SerializerException {
     final ContextURL contextURL = checkContextURL(options == null ? null : options.getContextURL());
 
     SerializerException cachedException = null;
