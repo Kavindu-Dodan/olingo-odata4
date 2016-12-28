@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 
-public class ComplexStreamContentForXml extends ComplexStreamContent {
+class ComplexStreamContentForXml extends ComplexStreamContent {
    private final ODataXmlSerializer xmlSerializer;
 
    protected ComplexStreamContentForXml(ComplexIterator iterator, EdmComplexType edmComplexType,

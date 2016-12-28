@@ -29,7 +29,7 @@ import org.apache.olingo.server.core.serializer.xml.ODataXmlSerializer;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class PrimitiveStreamContentForXml extends PrimitiveStreamContent {
+class PrimitiveStreamContentForXml extends PrimitiveStreamContent {
    private final ODataXmlSerializer xmlSerializer;
 
    protected PrimitiveStreamContentForXml(

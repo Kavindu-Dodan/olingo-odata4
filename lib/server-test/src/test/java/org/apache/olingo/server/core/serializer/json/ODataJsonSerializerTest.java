@@ -1574,8 +1574,58 @@ public class ODataJsonSerializerTest {
     final String resultString = new String(bout.toByteArray(), "UTF-8");
 
     Assert.assertEquals("{\"value\":[\"Employee1@company.example\","
-                                + "\"Employee2@company.example\",\"Employee3@company.example\"]}",
-                        resultString);
+        + "\"Employee2@company.example\",\"Employee3@company.example\"]}",
+        resultString);
+  }
+
+  @Test
+  public void primitiveCollectionStreamedWithError() throws Exception {
+    final EdmEntitySet edmEntitySet = entityContainer.getEntitySet("ESCollAllPrim");
+    final EdmProperty edmProperty = (EdmProperty) edmEntitySet.getEntityType().getProperty("CollPropertyString");
+    final Property property = data.readAll(edmEntitySet).getEntities().get(0).getProperty(edmProperty.getName());
+
+    final Iterator<?> primitiveIterator = property.asCollection().iterator();
+
+    // Note - We combine returning null value with serialization option of nullable to throw the error
+    final PropertyIterator valueProvider = new PropertyIterator(property.getName()) {
+      @Override
+      public boolean hasNext() {
+        return primitiveIterator.hasNext();
+      }
+
+      @Override
+      public Object next() {
+        return null;
+      }
+    };
+
+    final ODataContentWriteErrorCallback errorCallback = new ODataContentWriteErrorCallback() {
+      @Override
+      public void handleError(ODataContentWriteErrorContext context, WritableByteChannel channel) {
+        try {
+          String msgKey = context.getODataLibraryException().getMessageKey().getKey();
+          String toChannel = "ERROR : " + msgKey;
+          channel.write(ByteBuffer.wrap(toChannel.getBytes("UTF-8")));
+        } catch (IOException e) {
+          throw new RuntimeException("Error in error.");
+        }
+      }
+    };
+
+    final SerializerStreamResult serializerStreamResult = serializerNoMetadata.primitiveCollectionStreamed(
+            metadata,
+            (EdmPrimitiveType) edmProperty.getType(),
+            valueProvider,
+            PrimitiveSerializerOptions.with()
+                    .writeContentErrorCallback(errorCallback)
+                    .nullable(false)
+                    .build());
+
+    final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    serializerStreamResult.getODataContent().write(bout);
+
+    final String resultString = new String(bout.toByteArray(), "UTF-8");
+    Assert.assertEquals("ERROR : WRONG_PROPERTY_VALUE", resultString);
   }
 
   @Test
@@ -1679,10 +1729,57 @@ public class ODataJsonSerializerTest {
 
     final String resultString = new String(bout.toByteArray(), "UTF-8");
 
-    Assert.assertEquals("{\"value\":[{\"PropertyInt16\":123,\"PropertyString\":\"TEST 1\"}," +
-                                "{\"PropertyInt16\":456," + "\"PropertyString\":\"TEST 2\"}," +
-                                "{\"PropertyInt16\":789,\"PropertyString\":\"TEST 3\"}]}",
-                        resultString);
+    Assert.assertEquals("{\"value\":[{\"PropertyInt16\":123,\"PropertyString\":\"TEST 1\"},"
+        + "{\"PropertyInt16\":456," + "\"PropertyString\":\"TEST 2\"},"
+        + "{\"PropertyInt16\":789,\"PropertyString\":\"TEST 3\"}]}",
+        resultString);
+  }
+
+  @Test
+  public void complexCollectionStreamedWithError() throws Exception {
+    final EdmEntitySet edmEntitySet = entityContainer.getEntitySet("ESMixPrimCollComp");
+    final EdmProperty edmProperty = (EdmProperty) edmEntitySet.getEntityType().getProperty("CollPropertyComp");
+    final Property property = data.readAll(edmEntitySet).getEntities().get(0).getProperty(edmProperty.getName());
+
+    final Iterator<?> complexIterator = property.asCollection().iterator();
+
+    final ComplexIterator valueProvider = new ComplexIterator() {
+      @Override
+      public boolean hasNext() {
+        return complexIterator.hasNext();
+      }
+
+      @Override
+      public ComplexValue next() {
+        return new ComplexValue();
+      }
+    };
+
+    final ODataContentWriteErrorCallback errorCallback = new ODataContentWriteErrorCallback() {
+      @Override
+      public void handleError(ODataContentWriteErrorContext context, WritableByteChannel channel) {
+        try {
+          String msgKey = context.getODataLibraryException().getMessageKey().getKey();
+          String toChannel = "ERROR : " + msgKey;
+          channel.write(ByteBuffer.wrap(toChannel.getBytes("UTF-8")));
+        } catch (IOException e) {
+          throw new RuntimeException("Error in error.");
+        }
+      }
+    };
+
+    final SerializerStreamResult serializerStreamResult =
+            serializerNoMetadata.complexCollectionStreamed(
+                    metadata,
+                    (EdmComplexType) edmProperty.getType(),
+                    valueProvider,
+                    ComplexSerializerOptions.with().writeContentErrorCallback(errorCallback).build());
+
+    final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    serializerStreamResult.getODataContent().write(bout);
+
+    final String resultString = new String(bout.toByteArray(), "UTF-8");
+    Assert.assertEquals("ERROR : MISSING_PROPERTY", resultString);
   }
 
   @Test

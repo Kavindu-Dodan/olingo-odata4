@@ -909,9 +909,8 @@ public class ODataXmlSerializer extends AbstractODataSerializer {
       writePrimitiveValue(type, value, isNullable, maxLength, precision,
                           scale, isUnicode, xml10InvalidCharReplacement, writer);
 
+      writer.writeEndElement();
     }
-    writer.writeEndElement();
-
   }
 
   private void writeComplexCollectionStream(final ServiceMetadata metadata,
@@ -925,8 +924,8 @@ public class ODataXmlSerializer extends AbstractODataSerializer {
       }
       writeComplexValue(metadata, type, value.getValue(), selectedPaths,
                         xml10InvalidCharReplacement, writer);
+      writer.writeEndElement();
     }
-    writer.writeEndElement();
   }
 
   private void writeComplexCollection(final ServiceMetadata metadata,

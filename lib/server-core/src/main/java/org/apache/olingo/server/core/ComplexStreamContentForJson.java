@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 
-public class ComplexStreamContentForJson extends ComplexStreamContent {
+class ComplexStreamContentForJson extends ComplexStreamContent {
    private final ODataJsonSerializer jsonSerializer;
 
    protected ComplexStreamContentForJson(ComplexIterator iterator, EdmComplexType edmComplexType,
