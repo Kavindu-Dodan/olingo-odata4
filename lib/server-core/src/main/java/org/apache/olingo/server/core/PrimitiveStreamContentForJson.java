@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 
-public class PrimitiveStreamContentForJson extends PrimitiveStreamContent {
+class PrimitiveStreamContentForJson extends PrimitiveStreamContent {
    private final ODataJsonSerializer jsonSerializer;
 
    protected PrimitiveStreamContentForJson(
