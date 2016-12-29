@@ -18,9 +18,17 @@
  */
 package org.apache.olingo.commons.api.data;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public abstract class CollectionIterator<T> implements Iterator<T>, Iterable<T> {
+
+   private List<Operation> operations = new ArrayList<Operation>();
+
+   public List<Operation> getOperations() {
+      return operations;
+   }
 
    public abstract boolean hasNext();
 

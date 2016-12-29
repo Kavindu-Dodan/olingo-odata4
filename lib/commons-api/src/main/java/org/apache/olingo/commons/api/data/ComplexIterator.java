@@ -20,12 +20,7 @@ package org.apache.olingo.commons.api.data;
 
 import org.apache.olingo.commons.api.ex.ODataNotSupportedException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public abstract class ComplexIterator extends CollectionIterator<ComplexValue> {
-
-   private List<Operation> operations = new ArrayList<Operation>();
 
    /**
     * String representation of type (can be null)
@@ -38,10 +33,6 @@ public abstract class ComplexIterator extends CollectionIterator<ComplexValue> {
 
    public ComplexIterator(final String type) {
       this.type = type;
-   }
-
-   public List<Operation> getOperations() {
-      return operations;
    }
 
    public String getType() {

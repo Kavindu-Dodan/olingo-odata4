@@ -20,20 +20,12 @@ package org.apache.olingo.commons.api.data;
 
 import org.apache.olingo.commons.api.ex.ODataNotSupportedException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public abstract class PropertyIterator<T> extends CollectionIterator<T> {
 
-   private final List<Operation> operations = new ArrayList<Operation>();
    private final String name;
 
    protected PropertyIterator(String name) {
       this.name = name;
-   }
-
-   public List<Operation> getOperations() {
-      return operations;
    }
 
    /**
